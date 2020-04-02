@@ -57,10 +57,33 @@ func UserGetOne(w http.ResponseWriter, r *http.Request) {
 	user, err := urepo.GetUserByNickname(nickname)
 	fmt.Println(err)
 	if err != nil {
-		utills.SendServerError("cant find user with nickname "+nickname, http.StatusUnauthorized, w)
+		utills.SendServerError("Can't find user by nickname: "+nickname, http.StatusNotFound, w)
 		return
 	}
 	utills.SendOKAnswer(user, w)
+}
+
+func addEmptyDataWithOldData(newUser umodel.User, oldUserData umodel.User) umodel.User {
+	if newUser.Email == "" {
+		fmt.Println("truble", oldUserData.Email)
+		newUser.Email = oldUserData.Email
+	}
+
+	if newUser.Fullname == "" {
+		newUser.Fullname = oldUserData.Fullname
+	}
+
+	if newUser.About == "" {
+		newUser.About = oldUserData.About
+	}
+	return newUser
+}
+
+func checkIsEmpty(newUser umodel.User) bool {
+	if newUser.Email == "" || newUser.Nickname == "" || newUser.About == "" {
+		return true
+	}
+	return false
 }
 
 func UserUpdate(w http.ResponseWriter, r *http.Request) {
@@ -72,12 +95,21 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	updatedUser, err := urepo.UpdateUser(oldNickname, newUser)
+
 	if err == sql.ErrNoRows {
-		utills.SendAnswerWithCode("cant find user with this nick: "+oldNickname, http.StatusNotFound, w)
+		utills.SendServerError("cant find user with this nick: "+oldNickname, http.StatusNotFound, w)
 		return
 	}
 	if err != nil {
-		utills.SendAnswerWithCode("cant find user with this nick: "+oldNickname, http.StatusConflict, w)
+		userWithThisEmail, err := urepo.GetUserByEmail(newUser.Email)
+		fmt.Println(err)
+		if err != nil {
+
+			utills.SendAnswerWithCode("err : "+oldNickname, http.StatusNotFound, w)
+			return
+		}
+		utills.SendServerError("cant find user with this nick: "+userWithThisEmail.Nickname, http.StatusConflict, w)
+
 		return
 	}
 	utills.SendOKAnswer(updatedUser, w)

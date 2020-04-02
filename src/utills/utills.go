@@ -34,10 +34,16 @@ type HttpResponse struct {
 	Errors []HttpError `json:"errors"`
 }
 
+type ModelError struct {
+
+	// Текстовое описание ошибки. В процессе проверки API никаких проверок на содерижимое данного описание не делается.
+	Message string `json:"message,omitempty"`
+}
+
 func SendServerError(errorMessage string, code int, w http.ResponseWriter) {
 	log.Error().Msgf(errorMessage)
 	w.WriteHeader(code)
-	mes, _ := json.Marshal(errorMessage)
+	mes, _ := json.Marshal(ModelError{Message: errorMessage})
 	w.Write(mes)
 }
 

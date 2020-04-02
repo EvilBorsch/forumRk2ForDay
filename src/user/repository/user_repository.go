@@ -30,9 +30,25 @@ func GetUserByNicknameAndEmail(nickname string, email string) ([]umodel.User, er
 
 func UpdateUser(oldNickname string, newUser umodel.User) (umodel.User, error) {
 	conn := utills.GetConnection()
-	query := `UPDATE "user" SET fullname=$1,about=$2,email=$3 WHERE nickname=$4 RETURNING *`
+	query := `UPDATE "user" SET 
+                about=COALESCE(NULLIF($1, ''), about),
+                email=COALESCE(NULLIF($2, ''), email),
+                fullname=COALESCE(NULLIF($3, ''), fullname) 
+WHERE LOWER(nickname) = LOWER($4) RETURNING *`
+	if newUser.Email == "" && newUser.About == "" && newUser.Fullname == "" {
+		return GetUserByNickname(oldNickname)
+	}
+
 	var updatedUser umodel.User
-	err := conn.Get(&updatedUser, query, newUser.Fullname, newUser.About, newUser.Email, oldNickname)
+	err := conn.Get(&updatedUser, query, newUser.About, newUser.Email, newUser.Fullname, oldNickname)
 	return updatedUser, err
 
+}
+
+func GetUserByEmail(email string) (umodel.User, error) {
+	conn := utills.GetConnection()
+	query := `SELECT * from "user" WHERE email=$1`
+	var user umodel.User
+	err := conn.Get(&user, query, email)
+	return user, err
 }
