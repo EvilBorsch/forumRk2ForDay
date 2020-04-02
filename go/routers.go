@@ -11,6 +11,7 @@ package swagger
 
 import (
 	fdelivery "../src/forum/delivery"
+	tdelivery "../src/thread/delivery"
 	ud "../src/user/delivery"
 	"../src/utills"
 	"fmt"
@@ -83,7 +84,7 @@ var routes = Routes{
 		"ForumGetThreads",
 		strings.ToUpper("Get"),
 		"/api/forum/{slug}/threads",
-		ForumGetThreads,
+		fdelivery.ForumGetThreads,
 	},
 
 	Route{
@@ -125,7 +126,7 @@ var routes = Routes{
 		"ThreadCreate",
 		strings.ToUpper("Post"),
 		"/api/forum/{slug}/create",
-		ThreadCreate,
+		tdelivery.ThreadCreate,
 	},
 
 	Route{

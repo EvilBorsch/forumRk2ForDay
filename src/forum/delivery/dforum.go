@@ -29,14 +29,13 @@ func fetchForum(r *http.Request) (fmodel.Forum, error) {
 func ForumCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	forum, err := fetchForum(r)
-
 	newForum, err := frepo.CreateForum(forum)
 	fmt.Println(newForum, err)
 	if err != nil && (err.Error() == `pq: insert or update on table "forum" violates foreign key constraint "forum_user_nickname_fkey"` || err == sql.ErrNoRows) {
 		utills.SendServerError("cant find user", http.StatusNotFound, w)
 		return
 	}
-	if err != nil && err.Error() == `pq: duplicate key value violates unique constraint "forum_slug_key"` {
+	if err != nil && err.Error() == `pq: duplicate key value violates unique constraint "forum_pkey"` {
 		forumWithThisSlug, err := frepo.GetForumBySlug(forum.Slug)
 		fmt.Println("ASDJHASKJHD: ", err)
 		utills.SendAnswerWithCode(forumWithThisSlug, http.StatusConflict, w)
@@ -55,4 +54,28 @@ func ForumGetOne(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utills.SendOKAnswer(forum, w)
+}
+
+func ForumGetThreads(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	slug := mux.Vars(r)["slug"]
+	isDesc := r.FormValue("desc")
+	limit := r.FormValue("limit")
+	since := r.FormValue("since")
+	threads, err, needEmpty := frepo.GetThreadsByForumSlug(slug, isDesc, limit, since)
+	if len(threads) == 0 && needEmpty {
+		fmt.Println("tutu empty")
+		utills.SendOKAnswer([]fmodel.Forum{}, w)
+		return
+	}
+	if err != nil {
+		fmt.Println(err)
+		//todo
+	}
+	if len(threads) == 0 {
+		fmt.Println("empty")
+		utills.SendServerError("Can't find forum by slug: "+slug, http.StatusNotFound, w)
+		return
+	}
+	utills.SendOKAnswer(threads, w)
 }
