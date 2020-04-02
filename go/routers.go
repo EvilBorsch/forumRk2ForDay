@@ -12,7 +12,7 @@ package swagger
 import (
 	fdelivery "../src/forum/delivery"
 	ud "../src/user/delivery"
-	"database/sql"
+	"../src/utills"
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -28,23 +28,8 @@ type Route struct {
 
 type Routes []Route
 
-var conn *sql.DB
-
-func createConnection() {
-	connStr := fmt.Sprintf("user=%s password=%s dbname=postgres sslmode=disable port=%s",
-		"postgres",
-		"",
-		5431)
-
-	conn, _ = sql.Open("postgres", connStr)
-}
-
-func GetConnection() *sql.DB {
-	return conn
-}
-
 func NewRouter() *mux.Router {
-	createConnection()
+	utills.CreateConnection()
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {
 		var handler http.Handler
@@ -182,7 +167,7 @@ var routes = Routes{
 		"UserGetOne",
 		strings.ToUpper("Get"),
 		"/api/user/{nickname}/profile",
-		UserGetOne,
+		ud.UserGetOne,
 	},
 
 	Route{

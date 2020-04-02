@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 )
@@ -27,10 +28,32 @@ func fetchUser(r *http.Request) (umodel.User, error) {
 
 func UserCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	nickname := mux.Vars(r)["nickname"]
 	user, err := fetchUser(r)
-	fmt.Println(user, err)
-	utills.SendOKAnswer(user, w)
+	if err != nil {
+		utills.SendServerError("can Json Data", http.StatusConflict, w)
+		return
+	}
+	user.Nickname = nickname
 	err = urepo.SaveUser(user)
 	fmt.Println(err)
+	if err != nil {
+		utills.SendServerError("user already ", http.StatusConflict, w)
+		return
+	}
 
+	utills.SendOKAnswer(user, w)
+
+}
+
+func UserGetOne(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	nickname := mux.Vars(r)["nickname"]
+	user, err := urepo.GetUserByNickname(nickname)
+	fmt.Println(err)
+	if err != nil {
+		utills.SendServerError("cant find user with nickname "+nickname, http.StatusUnauthorized, w)
+		return
+	}
+	utills.SendOKAnswer(user, w)
 }
