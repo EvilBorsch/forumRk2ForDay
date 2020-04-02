@@ -42,7 +42,7 @@ func SendServerError(errorMessage string, code int, w http.ResponseWriter) {
 }
 
 func SendOKAnswer(data interface{}, w http.ResponseWriter) {
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	serializedData, err := json.Marshal(data)
 	if err != nil {
 		log.Error().Msgf(err.Error())
@@ -56,4 +56,21 @@ func SendOKAnswer(data interface{}, w http.ResponseWriter) {
 		return
 	}
 	log.Info().Msgf("OK message sent")
+}
+
+func SendAnswerWithCode(data interface{}, code int, w http.ResponseWriter) {
+	w.WriteHeader(code)
+	serializedData, err := json.Marshal(data)
+	if err != nil {
+		log.Error().Msgf(err.Error())
+		return
+	}
+
+	_, err = w.Write(serializedData)
+	if err != nil {
+		message := fmt.Sprintf("HttpResponse while writing is socket: %s", err.Error())
+		log.Error().Msgf(message)
+		return
+	}
+	log.Info().Msgf("Code message sent")
 }

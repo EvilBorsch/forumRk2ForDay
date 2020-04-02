@@ -4,6 +4,7 @@ import (
 	"../../utills"
 	umodel "../models"
 	urepo "../repository"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -38,11 +39,15 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 	err = urepo.SaveUser(user)
 	fmt.Println(err)
 	if err != nil {
-		utills.SendServerError("user already ", http.StatusConflict, w)
+		userList, err := urepo.GetUserByNicknameAndEmail(user.Nickname, user.Email)
+		if err != nil {
+			utills.SendServerError("error when try find users with this email and nick", http.StatusConflict, w)
+		}
+		utills.SendAnswerWithCode(userList, http.StatusConflict, w)
 		return
 	}
 
-	utills.SendOKAnswer(user, w)
+	utills.SendAnswerWithCode(user, http.StatusCreated, w)
 
 }
 
@@ -56,4 +61,24 @@ func UserGetOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	utills.SendOKAnswer(user, w)
+}
+
+func UserUpdate(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	newUser, err := fetchUser(r)
+	oldNickname := mux.Vars(r)["nickname"]
+	if err != nil {
+		utills.SendServerError("can Json Data", http.StatusConflict, w)
+		return
+	}
+	updatedUser, err := urepo.UpdateUser(oldNickname, newUser)
+	if err == sql.ErrNoRows {
+		utills.SendAnswerWithCode("cant find user with this nick: "+oldNickname, http.StatusNotFound, w)
+		return
+	}
+	if err != nil {
+		utills.SendAnswerWithCode("cant find user with this nick: "+oldNickname, http.StatusConflict, w)
+		return
+	}
+	utills.SendOKAnswer(updatedUser, w)
 }

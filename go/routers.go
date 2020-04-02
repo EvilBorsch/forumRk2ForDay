@@ -174,6 +174,6 @@ var routes = Routes{
 		"UserUpdate",
 		strings.ToUpper("Post"),
 		"/api/user/{nickname}/profile",
-		UserUpdate,
+		ud.UserUpdate,
 	},
 }
