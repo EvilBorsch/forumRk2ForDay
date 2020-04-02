@@ -76,7 +76,7 @@ var routes = Routes{
 		"ForumGetOne",
 		strings.ToUpper("Get"),
 		"/api/forum/{slug}/details",
-		ForumGetOne,
+		fdelivery.ForumGetOne,
 	},
 
 	Route{
