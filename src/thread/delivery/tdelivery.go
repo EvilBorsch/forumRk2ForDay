@@ -44,6 +44,11 @@ func ThreadCreate(w http.ResponseWriter, r *http.Request) {
 			utills.SendAnswerWithCode(th, http.StatusConflict, w)
 			return
 		}
+		if err.Error() == "no forum" {
+			utills.SendServerError("Can't find thread forum by slug: "+thread.Forum, http.StatusNotFound, w)
+			return
+		}
+
 	}
 	resultThread.Created = resultThread.Created.UTC()
 	utills.SendAnswerWithCode(resultThread, http.StatusCreated, w)
