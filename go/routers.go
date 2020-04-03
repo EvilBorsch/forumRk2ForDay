@@ -11,6 +11,7 @@ package swagger
 
 import (
 	fdelivery "../src/forum/delivery"
+	pdelivery "../src/post/delivery"
 	tdelivery "../src/thread/delivery"
 	ud "../src/user/delivery"
 	"../src/utills"
@@ -112,7 +113,7 @@ var routes = Routes{
 		"PostsCreate",
 		strings.ToUpper("Post"),
 		"/api/thread/{slug_or_id}/create",
-		PostsCreate,
+		pdelivery.PostsCreate,
 	},
 
 	Route{

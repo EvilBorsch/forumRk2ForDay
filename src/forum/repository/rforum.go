@@ -58,7 +58,6 @@ func GetThreadsByForumSlug(forumSlug string, isDesc string, limit string, since 
 	if limit != "" {
 		query = query + " LIMIT " + limit
 	}
-	fmt.Println(isDesc, limit, limit == "true")
 	err = conn.Select(&thread, query, forumSlug)
 	return thread, err, true
 
