@@ -20,7 +20,6 @@ func CreateForum(forum fmodel.Forum) (fmodel.Forum, error) {
 	forum.User_nickname = user.Nickname
 	query := `INSERT INTO forum (title, user_nickname, slug) VALUES ($1,$2,$3) returning *`
 	err = conn.Get(&newForum, query, forum.Title, forum.User_nickname, forum.Slug)
-
 	return newForum, err
 }
 
@@ -60,5 +59,12 @@ func GetThreadsByForumSlug(forumSlug string, isDesc string, limit string, since 
 	}
 	err = conn.Select(&thread, query, forumSlug)
 	return thread, err, true
+}
 
+func IncrementFieldBySlug(fieldName string, slug string) error {
+	query := fmt.Sprintf(`UPDATE forum SET %s =%s + 1 WHERE slug=$1`, fieldName, fieldName)
+	fmt.Println(query)
+	conn := utills.GetConnection()
+	_, err := conn.Exec(query, slug)
+	return err
 }
