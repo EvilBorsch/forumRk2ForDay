@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 )
@@ -21,6 +22,7 @@ func fetchThread(r *http.Request) (tmodel.Thread, error) {
 	var thread tmodel.Thread
 	err = json.Unmarshal(data, &thread)
 	thread.Created = thread.Created.UTC()
+	thread.Forum = mux.Vars(r)["slug"]
 	return thread, err
 }
 
@@ -35,6 +37,11 @@ func ThreadCreate(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("err: ", err)
 		if err.Error() == `pq: insert or update on table "threads" violates foreign key constraint "threads_author_fkey"` {
 			utills.SendServerError("not found", http.StatusNotFound, w)
+			return
+		}
+		if err.Error() == `pq: duplicate key value violates unique constraint "threads_slug_key"` {
+			th, _ := trepo.GetThreadBySlugWithoutTx(thread.Slug)
+			utills.SendAnswerWithCode(th, http.StatusConflict, w)
 			return
 		}
 	}
