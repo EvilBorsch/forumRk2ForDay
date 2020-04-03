@@ -13,9 +13,8 @@ import (
 	"net/http"
 )
 
-var badStaff = errors.New("bad json data")
-
 func fetchForum(r *http.Request) (fmodel.Forum, error) {
+	var badStaff = errors.New("bad json data")
 	defer r.Body.Close()
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {

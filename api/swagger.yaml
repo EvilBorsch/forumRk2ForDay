@@ -127,7 +127,7 @@ paths:
         minimum: 1
         format: "int32"
         x-exportParamName: "Limit"
-        x-optionalDataType: "Float32"
+        x-optionalDataType: "int"
       - name: "since"
         in: "query"
         description: "Идентификатор пользователя, с которого будут выводиться поль\
@@ -179,7 +179,7 @@ paths:
         minimum: 1
         format: "int32"
         x-exportParamName: "Limit"
-        x-optionalDataType: "Float32"
+        x-optionalDataType: "int"
       - name: "since"
         in: "query"
         description: "Дата создания ветви обсуждения, с которой будут выводиться з\
@@ -411,7 +411,7 @@ paths:
         minimum: 1
         format: "int32"
         x-exportParamName: "Limit"
-        x-optionalDataType: "Float32"
+        x-optionalDataType: "int"
       - name: "since"
         in: "query"
         description: "Идентификатор поста, после которого будут выводиться записи\n\
@@ -420,7 +420,7 @@ paths:
         type: "number"
         format: "int64"
         x-exportParamName: "Since"
-        x-optionalDataType: "Float32"
+        x-optionalDataType: "int"
       - name: "sort"
         in: "query"
         description: "Вид сортировки:\n\n * flat - по дате, комментарии выводятся\

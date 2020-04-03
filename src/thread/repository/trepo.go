@@ -5,6 +5,7 @@ import (
 	"../../utills"
 	tm "../models"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 )
 
 func AddNew(newThread tm.Thread) (tm.Thread, error) {
@@ -18,4 +19,18 @@ func AddNew(newThread tm.Thread) (tm.Thread, error) {
 	}
 	return createdThred, err
 
+}
+
+func GetThreadBySlug(tx *sqlx.Tx, threadSlug string) (tm.Thread, error) {
+	var thread tm.Thread
+	query := `SELECT * FROM threads where slug=$1`
+	err := tx.Get(&thread, query, threadSlug)
+	return thread, err
+}
+
+func GetThreadByID(tx *sqlx.Tx, id int) (tm.Thread, error) {
+	var thread tm.Thread
+	query := `SELECT * FROM threads where id=$1`
+	err := tx.Get(&thread, query, id)
+	return thread, err
 }
