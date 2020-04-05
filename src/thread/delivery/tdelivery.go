@@ -26,6 +26,18 @@ func fetchThread(r *http.Request) (tmodel.Thread, error) {
 	return thread, err
 }
 
+func fetchVote(r *http.Request) (tmodel.Vote, error) {
+	var badStaff = errors.New("bad json data")
+	defer r.Body.Close()
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return tmodel.Vote{}, badStaff
+	}
+	var vote tmodel.Vote
+	err = json.Unmarshal(data, &vote)
+	return vote, err
+}
+
 func ThreadCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	thread, err := fetchThread(r)
@@ -52,4 +64,22 @@ func ThreadCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	resultThread.Created = resultThread.Created.UTC()
 	utills.SendAnswerWithCode(resultThread, http.StatusCreated, w)
+}
+
+func ThreadVote(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	slug_or_id := mux.Vars(r)["slug_or_id"]
+	vote, _ := fetchVote(r)
+	thread, err := trepo.MakeVote(slug_or_id, vote)
+	fmt.Println(thread, err)
+	if err != nil {
+		if err.Error() == "vote already exist" {
+			utills.SendServerError("already voted", http.StatusNotFound, w)
+			return
+		}
+		if err.Error() == "thread is not exist" {
+			utills.SendServerError("thread is not exist", http.StatusNotFound, w)
+		}
+	}
+	utills.SendAnswerWithCode(thread, http.StatusOK, w)
 }

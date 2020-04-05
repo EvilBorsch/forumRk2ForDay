@@ -155,7 +155,7 @@ var routes = Routes{
 		"ThreadVote",
 		strings.ToUpper("Post"),
 		"/api/thread/{slug_or_id}/vote",
-		ThreadVote,
+		tdelivery.ThreadVote,
 	},
 
 	Route{
