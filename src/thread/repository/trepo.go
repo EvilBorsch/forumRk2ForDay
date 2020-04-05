@@ -88,10 +88,10 @@ func UpdateVoteInVotes(tx *sqlx.Tx, newVote tm.Vote) error {
 	return err
 }
 
-func getOldVoteByAuthor(tx *sqlx.Tx, author string) (tm.Vote, error) {
-	query := `Select nickname,voice from votes where nickname=$1`
+func getOldVoteBySlugAndAuthor(tx *sqlx.Tx, slug string, author string) (tm.Vote, error) {
+	query := `Select nickname,voice from votes where nickname=$1 and threadslug=$2`
 	var oldVote tm.Vote
-	err := tx.Get(&oldVote, query, author)
+	err := tx.Get(&oldVote, query, author, slug)
 	if err != nil {
 		notFound := errors.New("no vote")
 		return tm.Vote{}, notFound
@@ -118,60 +118,92 @@ func InsertNewVoteWithThreadId(tx *sqlx.Tx, newVote tm.Vote, slug_or_id string) 
 func InsertNewVoteWithThreadSlug(tx *sqlx.Tx, newVote tm.Vote, slug_or_id string) {
 
 	query := `INSERT INTO votes (threadid, threadslug, nickname, voice) VALUES ($1,$2,$3,$4)`
-	tx.Exec(query, nil, slug_or_id, newVote.Nickname, newVote.Voice)
+	_, err := tx.Exec(query, nil, slug_or_id, newVote.Nickname, newVote.Voice)
+	fmt.Println(err)
+}
 
+func getAuthorVotesByThread(tx *sqlx.Tx, thread tm.Thread, nick string) (tm.Vote, error) {
+	query := `Select nickname,voice from votes where nickname=$1 and (threadID=$2 or threadSlug=$3)`
+	var vote tm.Vote
+	err := tx.Get(&vote, query, nick, thread.Id, thread.Slug)
+	return vote, err
 }
 
 func MakeVote(slug_or_id string, newVote tm.Vote) (tm.Thread, error) {
-	AlreadyExistErr := errors.New("vote already exist")
+	AlreadyVotedErr := errors.New("already voted")
 	ThreadIsNotExistErr := errors.New("thread is not exist")
+	author := newVote.Nickname
 	conn := utills.GetConnection()
 	tx := conn.MustBegin()
 	defer tx.Commit()
 	if isDigit(slug_or_id) {
-		oldVote, err := getOldVoteByAuthor(tx, newVote.Nickname)
-		if err != nil && err.Error() == `no vote` {
-			delta := newVote.Voice
-			IncThread, err := IncrementVoteByID(tx, slug_or_id, delta)
-			if err != nil {
-				return tm.Thread{}, ThreadIsNotExistErr
-			}
-			InsertNewVoteWithThreadId(tx, newVote, slug_or_id)
-
-			return IncThread, err
-		}
-		if oldVote.Voice == newVote.Voice {
-			return tm.Thread{}, AlreadyExistErr
-		}
-		delta := newVote.Voice - oldVote.Voice
-		IncThread, err := IncrementVoteByID(tx, slug_or_id, delta)
+		idStr, _ := strconv.Atoi(slug_or_id)
+		thread, err := GetThreadByID(tx, idStr)
 		if err != nil {
 			return tm.Thread{}, ThreadIsNotExistErr
+		}
+		oldVote, err := getAuthorVotesByThread(tx, thread, author)
+		if err != nil { // не нашли оценки
+			InsertNewVoteWithThreadId(tx, newVote, slug_or_id)
+			incThread, err := IncrementVoteByID(tx, slug_or_id, newVote.Voice)
+			fmt.Println(incThread, err)
+			return incThread, err
+		} //нашли старую оценку
+		delta := newVote.Voice - oldVote.Voice
+		if delta == 0 {
+			return thread, AlreadyVotedErr
 		}
 		UpdateVoteInVotes(tx, newVote)
-		return IncThread, err
+		incThread, err := IncrementVoteByID(tx, slug_or_id, delta)
+		return incThread, err
 	}
 
-	oldVote, err := getOldVoteByAuthor(tx, newVote.Nickname)
-	if err != nil && err.Error() == `no vote` {
-		delta := newVote.Voice
-		IncThread, err := IncrementVoteBySlug(tx, slug_or_id, delta)
-		if err != nil {
-			return tm.Thread{}, ThreadIsNotExistErr
-		}
-		InsertNewVoteWithThreadSlug(tx, newVote, slug_or_id)
-
-		return IncThread, err
-	}
-	if oldVote.Voice == newVote.Voice {
-		return tm.Thread{}, AlreadyExistErr
-	}
-	delta := newVote.Voice - oldVote.Voice
-	IncThread, err := IncrementVoteBySlug(tx, slug_or_id, delta)
+	thread, err := GetThreadBySlug(tx, slug_or_id)
 	if err != nil {
 		return tm.Thread{}, ThreadIsNotExistErr
 	}
+	oldVote, err := getAuthorVotesByThread(tx, thread, author)
+	if err != nil { // не нашли оценки
+		InsertNewVoteWithThreadSlug(tx, newVote, slug_or_id)
+		incThread, err := IncrementVoteBySlug(tx, slug_or_id, newVote.Voice)
+		fmt.Println(incThread, err)
+		return incThread, err
+	} //нашли старую оценку
+	delta := newVote.Voice - oldVote.Voice
+	if delta == 0 {
+		return thread, AlreadyVotedErr
+	}
 	UpdateVoteInVotes(tx, newVote)
-	return IncThread, err
+	incThread, err := IncrementVoteBySlug(tx, slug_or_id, delta)
+	return incThread, err
 
+}
+
+func checkIfAllOkSlugCase(tx *sqlx.Tx, slug string, author string) (tm.Thread, error) {
+
+	ThreadIsNotExistErr := errors.New("thread is not exist")
+	thread, err := GetThreadBySlug(tx, slug)
+	if err != nil {
+		return tm.Thread{}, ThreadIsNotExistErr
+	}
+	threadIdStr := strconv.Itoa(thread.Id)
+	_, err = getOldVoteByIdAndAuthor(tx, threadIdStr, author)
+	if err == nil {
+		return thread, errors.New("voted for another index")
+	}
+	return tm.Thread{}, nil
+}
+
+func checkIfAllOkIdCase(tx *sqlx.Tx, slug string, author string) (tm.Thread, error) {
+
+	ThreadIsNotExistErr := errors.New("thread is not exist")
+	thread, err := GetThreadBySlug(tx, slug)
+	if err != nil {
+		return tm.Thread{}, ThreadIsNotExistErr
+	}
+	_, err = getOldVoteBySlugAndAuthor(tx, thread.Slug, author)
+	if err == nil {
+		return thread, errors.New("voted for another index")
+	}
+	return tm.Thread{}, nil
 }

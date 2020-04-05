@@ -73,8 +73,8 @@ func ThreadVote(w http.ResponseWriter, r *http.Request) {
 	thread, err := trepo.MakeVote(slug_or_id, vote)
 	fmt.Println(thread, err)
 	if err != nil {
-		if err.Error() == "vote already exist" {
-			utills.SendServerError("already voted", http.StatusNotFound, w)
+		if err.Error() == "already voted" { // да да это тупо а что поделать
+			utills.SendAnswerWithCode(thread, http.StatusOK, w)
 			return
 		}
 		if err.Error() == "thread is not exist" {
