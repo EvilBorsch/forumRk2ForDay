@@ -1,12 +1,12 @@
 package post
 
 import (
-	tmodel "../../thread/models"
-	trepo "../../thread/repository"
-	"../../utills"
-	pmodel "../models"
 	"errors"
 	"fmt"
+	pmodel "go-server-server-generated/src/post/models"
+	tmodel "go-server-server-generated/src/thread/models"
+	trepo "go-server-server-generated/src/thread/repository"
+	"go-server-server-generated/src/utills"
 	"strconv"
 	"time"
 )

@@ -1,13 +1,13 @@
 package delivery
 
 import (
-	"../../utills"
-	tmodel "../models"
-	trepo "../repository"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
+	tmodel "go-server-server-generated/src/thread/models"
+	trepo "go-server-server-generated/src/thread/repository"
+	"go-server-server-generated/src/utills"
 	"io/ioutil"
 	"net/http"
 )

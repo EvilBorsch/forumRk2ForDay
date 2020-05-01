@@ -1,12 +1,12 @@
 package repository
 
 import (
-	frepo "../../forum/repository"
-	"../../utills"
-	tm "../models"
 	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	frepo "go-server-server-generated/src/forum/repository"
+	tm "go-server-server-generated/src/thread/models"
+	"go-server-server-generated/src/utills"
 	"strconv"
 )
 

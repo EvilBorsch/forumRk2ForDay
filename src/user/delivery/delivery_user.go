@@ -1,14 +1,14 @@
 package delivery
 
 import (
-	"../../utills"
-	umodel "../models"
-	urepo "../repository"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
+	umodel "go-server-server-generated/src/user/models"
+	urepo "go-server-server-generated/src/user/repository"
+	"go-server-server-generated/src/utills"
 	"io/ioutil"
 	"net/http"
 )

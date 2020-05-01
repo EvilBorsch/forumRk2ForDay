@@ -1,12 +1,12 @@
 package post
 
 import (
-	"../../utills"
-	pmodel "../models"
-	prepo "../repository"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	pmodel "go-server-server-generated/src/post/models"
+	prepo "go-server-server-generated/src/post/repository"
+	"go-server-server-generated/src/utills"
 	"io/ioutil"
 	"net/http"
 )

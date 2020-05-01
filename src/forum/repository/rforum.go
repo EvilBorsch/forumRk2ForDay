@@ -1,11 +1,11 @@
 package repository
 
 import (
-	tmodel "../../thread/models"
-	urepo "../../user/repository"
-	"../../utills"
-	fmodel "../models"
 	"fmt"
+	fmodel "go-server-server-generated/src/forum/models"
+	tmodel "go-server-server-generated/src/thread/models"
+	urepo "go-server-server-generated/src/user/repository"
+	"go-server-server-generated/src/utills"
 	"time"
 )
 

@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"../../utills"
-	umodel "../models"
+	umodel "go-server-server-generated/src/user/models"
+	"go-server-server-generated/src/utills"
 )
 
 func SaveUser(user umodel.User) error {

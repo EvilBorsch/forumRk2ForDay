@@ -1,14 +1,14 @@
 package delivery
 
 import (
-	"../../utills"
-	fmodel "../models"
-	frepo "../repository"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
+	fmodel "go-server-server-generated/src/forum/models"
+	frepo "go-server-server-generated/src/forum/repository"
+	"go-server-server-generated/src/utills"
 	"io/ioutil"
 	"net/http"
 )

@@ -10,13 +10,13 @@
 package swagger
 
 import (
-	fdelivery "../src/forum/delivery"
-	pdelivery "../src/post/delivery"
-	tdelivery "../src/thread/delivery"
-	ud "../src/user/delivery"
-	"../src/utills"
 	"fmt"
 	"github.com/gorilla/mux"
+	fdelivery "go-server-server-generated/src/forum/delivery"
+	pdelivery "go-server-server-generated/src/post/delivery"
+	tdelivery "go-server-server-generated/src/thread/delivery"
+	ud "go-server-server-generated/src/user/delivery"
+	"go-server-server-generated/src/utills"
 	"net/http"
 	"strings"
 )

@@ -10,23 +10,15 @@
 package main
 
 import (
+	swagger "go-server-server-generated/go"
 	"log"
 	"net/http"
-
-	// WARNING!
-	// Change this to a fully-qualified import path
-	// once you place this file into your project.
-	// For example,
-	//
-	//    sw "github.com/myname/myrepo/go"
-	//
-	sw "./go"
 )
 
 func main() {
 	log.Printf("Server started")
 
-	router := sw.NewRouter()
+	router := swagger.NewRouter()
 
 	log.Println(http.ListenAndServe(":8080", router))
 }
