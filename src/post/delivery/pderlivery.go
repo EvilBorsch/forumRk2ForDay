@@ -9,6 +9,7 @@ import (
 	"go-server-server-generated/src/utills"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 func PostsCreate(w http.ResponseWriter, r *http.Request) {
@@ -45,4 +46,27 @@ func fetchPost(r *http.Request) ([]pmodel.Post, error) {
 	var post []pmodel.Post
 	err = json.Unmarshal(data, &post)
 	return post, err
+}
+
+func GetPosts(w http.ResponseWriter, r *http.Request) {
+	var limit int
+	limitStr := r.FormValue("limit")
+	if limitStr == "" {
+		limit = 100
+	} else {
+		limit, _ = strconv.Atoi(limitStr)
+	}
+	slug_or_id := mux.Vars(r)["slug_or_id"]
+	sort := r.FormValue("sort")
+	fmt.Println(limit, sort)
+	if sort == "" || sort == "flat" {
+		posts, err := prepo.GetPostsWithFlatSort(slug_or_id, limit)
+		if err != nil {
+			utills.SendServerError("posts not found", 404, w)
+			return
+		}
+		utills.SendOKAnswer(posts, w)
+		return
+	}
+
 }

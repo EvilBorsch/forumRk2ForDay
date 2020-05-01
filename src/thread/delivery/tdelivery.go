@@ -10,6 +10,7 @@ import (
 	"go-server-server-generated/src/utills"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 func fetchThread(r *http.Request) (tmodel.Thread, error) {
@@ -82,4 +83,30 @@ func ThreadVote(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	utills.SendAnswerWithCode(thread, http.StatusOK, w)
+}
+
+func GetThread(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	slug_or_id := mux.Vars(r)["slug_or_id"]
+	tx := utills.StartTransaction()
+	defer utills.EndTransaction(tx)
+	if trepo.IsDigit(slug_or_id) {
+
+		idInt, _ := strconv.Atoi(slug_or_id)
+		thread, err := trepo.GetThreadByID(tx, idInt)
+		if err != nil {
+			utills.SendServerError("thread not found", 404, w)
+			return
+		}
+		utills.SendOKAnswer(thread, w)
+		return
+	}
+	thread, err := trepo.GetThreadBySlug(tx, slug_or_id)
+	if err != nil {
+		utills.SendServerError("thread not found", 404, w)
+		return
+	}
+	utills.SendOKAnswer(thread, w)
+	return
+
 }

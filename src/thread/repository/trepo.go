@@ -60,7 +60,7 @@ func GetThreadByIDWithoutTx(id int) (tm.Thread, error) {
 	return thread, err
 }
 
-func isDigit(v string) bool {
+func IsDigit(v string) bool {
 	if _, err := strconv.Atoi(v); err == nil {
 		return true
 	}
@@ -136,7 +136,7 @@ func MakeVote(slug_or_id string, newVote tm.Vote) (tm.Thread, error) {
 	conn := utills.GetConnection()
 	tx := conn.MustBegin()
 	defer tx.Commit()
-	if isDigit(slug_or_id) {
+	if IsDigit(slug_or_id) {
 		idStr, _ := strconv.Atoi(slug_or_id)
 		thread, err := GetThreadByID(tx, idStr)
 		if err != nil {

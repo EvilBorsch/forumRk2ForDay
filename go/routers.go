@@ -134,14 +134,14 @@ var routes = Routes{
 		"ThreadGetOne",
 		strings.ToUpper("Get"),
 		"/api/thread/{slug_or_id}/details",
-		ThreadGetOne,
+		tdelivery.GetThread,
 	},
 
 	Route{
 		"ThreadGetPosts",
 		strings.ToUpper("Get"),
 		"/api/thread/{slug_or_id}/posts",
-		ThreadGetPosts,
+		pdelivery.GetPosts,
 	},
 
 	Route{

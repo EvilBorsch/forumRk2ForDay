@@ -7,6 +7,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog/log"
 	"net/http"
+	"strconv"
 )
 
 var conn *sqlx.DB
@@ -79,4 +80,23 @@ func SendAnswerWithCode(data interface{}, code int, w http.ResponseWriter) {
 		return
 	}
 	log.Info().Msgf("Code message sent")
+}
+
+func StartTransaction() *sqlx.Tx {
+	conn := GetConnection()
+	tx := conn.MustBegin()
+	return tx
+}
+
+func EndTransaction(tx *sqlx.Tx) error {
+	err := tx.Commit()
+	return err
+}
+
+func IsDigit(value string) (int, bool) {
+	valueInt, err := strconv.Atoi(value)
+	if err != nil {
+		return 0, false
+	}
+	return valueInt, true
 }

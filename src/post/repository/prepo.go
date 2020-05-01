@@ -3,6 +3,7 @@ package post
 import (
 	"errors"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	pmodel "go-server-server-generated/src/post/models"
 	tmodel "go-server-server-generated/src/thread/models"
 	trepo "go-server-server-generated/src/thread/repository"
@@ -19,6 +20,7 @@ func isDigit(v string) bool {
 }
 
 func AddNewPosts(posts []pmodel.Post, threadSlug string) ([]pmodel.Post, error) {
+	timeCreated := time.Now().UTC()
 	query := `INSERT INTO posts (author, created, forum, isedited, message, parent, thread) VALUES ($1,$2,$3,$4,$5,NULLIF($6,0),$7) returning *`
 	conn := utills.GetConnection()
 	tx := conn.MustBegin()
@@ -38,7 +40,7 @@ func AddNewPosts(posts []pmodel.Post, threadSlug string) ([]pmodel.Post, error) 
 	}
 	fmt.Println(err)
 	for _, post := range posts {
-		post.Created = time.Now().UTC()
+		post.Created = timeCreated
 		post.Forum = thread.Forum
 		post.Thread = thread.Id
 		post.IsEdited = false
@@ -54,4 +56,32 @@ func AddNewPosts(posts []pmodel.Post, threadSlug string) ([]pmodel.Post, error) 
 	tx.Commit()
 	fmt.Println(postList)
 	return postList, err
+}
+
+func GetPostsWithFlatSort(slug_or_id string, limit int) ([]pmodel.Post, error) {
+	tx := utills.StartTransaction()
+	defer utills.EndTransaction(tx)
+	id, isDig := utills.IsDigit(slug_or_id)
+	if isDig {
+		return GetPostsWithFlatSortById(tx, id, limit)
+	} else {
+		return GetPostsWithFlatSortBySlug(tx, slug_or_id, limit)
+	}
+}
+
+func GetPostsWithFlatSortBySlug(tx *sqlx.Tx, slug string, limit int) ([]pmodel.Post, error) {
+	thread, err := trepo.GetThreadBySlug(tx, slug)
+	if err != nil {
+		return nil, err
+	}
+	return GetPostsWithFlatSortById(tx, thread.Id, limit)
+
+}
+
+func GetPostsWithFlatSortById(tx *sqlx.Tx, id int, limit int) ([]pmodel.Post, error) {
+	query := `Select * from posts where thread=$1 order by created,id LIMIT $2`
+	var posts []pmodel.Post
+	err := tx.Select(&posts, query, id, limit)
+	fmt.Println(err)
+	return posts, err
 }

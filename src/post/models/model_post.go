@@ -20,7 +20,7 @@ type Post struct {
 	Id int `json:"id,omitempty"`
 
 	// Идентификатор родительского сообщения (0 - корневое сообщение обсуждения).
-	Parent int `json:"parent,omitempty"`
+	Parent *int `json:"parent,omitempty"`
 
 	// Автор, написавший данное сообщение.
 	Author string `json:"author"`
