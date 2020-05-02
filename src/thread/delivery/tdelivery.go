@@ -108,5 +108,32 @@ func GetThread(w http.ResponseWriter, r *http.Request) {
 	}
 	utills.SendOKAnswer(thread, w)
 	return
+}
 
+func ThreadUpdate(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	slug_or_id := mux.Vars(r)["slug_or_id"]
+	newThread, _ := fetchThread(r)
+
+	tx := utills.StartTransaction()
+	defer utills.EndTransaction(tx)
+	id, isId := utills.IsDigit(slug_or_id)
+	if isId {
+		updatedThread, err := trepo.UpdateThreadById(tx, id, newThread)
+		if err != nil {
+			utills.SendServerError("thread with this id not found", 404, w)
+			return
+		}
+		utills.SendOKAnswer(updatedThread, w)
+		return
+	} else {
+		updatedThread, err := trepo.UpdateThreadBySlug(tx, slug_or_id, newThread)
+		if err != nil {
+			utills.SendServerError("thread with this slug not found", 404, w)
+			return
+		}
+		utills.SendOKAnswer(updatedThread, w)
+		return
+
+	}
 }

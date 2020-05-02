@@ -148,7 +148,7 @@ var routes = Routes{
 		"ThreadUpdate",
 		strings.ToUpper("Post"),
 		"/api/thread/{slug_or_id}/details",
-		ThreadUpdate,
+		tdelivery.ThreadUpdate,
 	},
 
 	Route{

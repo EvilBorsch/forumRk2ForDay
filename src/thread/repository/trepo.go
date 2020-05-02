@@ -179,31 +179,56 @@ func MakeVote(slug_or_id string, newVote tm.Vote) (tm.Thread, error) {
 
 }
 
-func checkIfAllOkSlugCase(tx *sqlx.Tx, slug string, author string) (tm.Thread, error) {
+func UpdateThreadBySlug(tx *sqlx.Tx, slug string, newThread tm.Thread) (tm.Thread, error) {
 
-	ThreadIsNotExistErr := errors.New("thread is not exist")
-	thread, err := GetThreadBySlug(tx, slug)
-	if err != nil {
-		return tm.Thread{}, ThreadIsNotExistErr
-	}
-	threadIdStr := strconv.Itoa(thread.Id)
-	_, err = getOldVoteByIdAndAuthor(tx, threadIdStr, author)
-	if err == nil {
-		return thread, errors.New("voted for another index")
-	}
-	return tm.Thread{}, nil
+	var updatedThread tm.Thread
+	query := `UPDATE threads SET
+                author=COALESCE(NULLIF($1, ''), author),
+                title=COALESCE(NULLIF($2, ''), title),
+                message=COALESCE(NULLIF($3, ''), message)
+			WHERE slug = $4 RETURNING *`
+	err := tx.Get(&updatedThread, query, newThread.Author, newThread.Title, newThread.Message, slug)
+
+	return updatedThread, err
+}
+func UpdateThreadById(tx *sqlx.Tx, id int, newThread tm.Thread) (tm.Thread, error) {
+
+	var updatedThread tm.Thread
+	query := `UPDATE threads SET
+                author=COALESCE(NULLIF($1, ''), author),
+                title=COALESCE(NULLIF($2, ''), title),
+                message=COALESCE(NULLIF($3, ''), message)
+			WHERE id = $4 RETURNING *`
+	err := tx.Get(&updatedThread, query, newThread.Author, newThread.Title, newThread.Message, id)
+
+	return updatedThread, err
 }
 
-func checkIfAllOkIdCase(tx *sqlx.Tx, slug string, author string) (tm.Thread, error) {
-
-	ThreadIsNotExistErr := errors.New("thread is not exist")
-	thread, err := GetThreadBySlug(tx, slug)
-	if err != nil {
-		return tm.Thread{}, ThreadIsNotExistErr
-	}
-	_, err = getOldVoteBySlugAndAuthor(tx, thread.Slug, author)
-	if err == nil {
-		return thread, errors.New("voted for another index")
-	}
-	return tm.Thread{}, nil
-}
+//func checkIfAllOkSlugCase(tx *sqlx.Tx, slug string, author string) (tm.Thread, error) {
+//
+//	ThreadIsNotExistErr := errors.New("thread is not exist")
+//	thread, err := GetThreadBySlug(tx, slug)
+//	if err != nil {
+//		return tm.Thread{}, ThreadIsNotExistErr
+//	}
+//	threadIdStr := strconv.Itoa(thread.Id)
+//	_, err = getOldVoteByIdAndAuthor(tx, threadIdStr, author)
+//	if err == nil {
+//		return thread, errors.New("voted for another index")
+//	}
+//	return tm.Thread{}, nil
+//}
+//
+//func checkIfAllOkIdCase(tx *sqlx.Tx, slug string, author string) (tm.Thread, error) {
+//
+//	ThreadIsNotExistErr := errors.New("thread is not exist")
+//	thread, err := GetThreadBySlug(tx, slug)
+//	if err != nil {
+//		return tm.Thread{}, ThreadIsNotExistErr
+//	}
+//	_, err = getOldVoteBySlugAndAuthor(tx, thread.Slug, author)
+//	if err == nil {
+//		return thread, errors.New("voted for another index")
+//	}
+//	return tm.Thread{}, nil
+//}
