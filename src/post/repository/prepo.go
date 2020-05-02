@@ -19,19 +19,28 @@ func isDigit(v string) bool {
 	return false
 }
 
+func UpdateForumPostsCountByThread(tx *sqlx.Tx, thread tmodel.Thread, incValue int) error {
+	forumSlug := thread.Forum
+	query := `UPDATE forum SET posts=posts+$1 where slug=$2`
+	_, err := tx.Exec(query, incValue, forumSlug)
+	return err
+}
+
 func AddNewPosts(posts []pmodel.Post, threadSlug string) ([]pmodel.Post, error) {
 	timeCreated := time.Now().UTC()
 	query := `INSERT INTO posts (author, created, forum, isedited, message, parent, thread) VALUES ($1,$2,$3,$4,$5,NULLIF($6,0),$7) returning *`
 	conn := utills.GetConnection()
 	tx := conn.MustBegin()
+	defer tx.Commit()
 	var postList []pmodel.Post
 	var err error
 	var thread tmodel.Thread
+	var threadId int
 	if isDigit(threadSlug) {
 		fmt.Println("is digit")
 		//todo
-		id, _ := strconv.Atoi(threadSlug)
-		thread, err = trepo.GetThreadByID(tx, id)
+		threadId, _ = strconv.Atoi(threadSlug)
+		thread, err = trepo.GetThreadByID(tx, threadId)
 	} else {
 		thread, err = trepo.GetThreadBySlug(tx, threadSlug)
 	}
@@ -53,7 +62,11 @@ func AddNewPosts(posts []pmodel.Post, threadSlug string) ([]pmodel.Post, error) 
 		postList = append(postList, newPost)
 
 	}
-	tx.Commit()
+	//todo check if work
+	if err != nil {
+		return postList, err
+	}
+	err = UpdateForumPostsCountByThread(tx, thread, len(postList))
 	fmt.Println(postList)
 	return postList, err
 }
