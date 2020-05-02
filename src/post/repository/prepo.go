@@ -7,12 +7,13 @@ import (
 	pmodel "go-server-server-generated/src/post/models"
 	tmodel "go-server-server-generated/src/thread/models"
 	trepo "go-server-server-generated/src/thread/repository"
+	"go-server-server-generated/src/user/repository"
 	"go-server-server-generated/src/utills"
 	"strconv"
 	"time"
 )
 
-func isDigit(v string) bool {
+func IsDigit(v string) bool {
 	if _, err := strconv.Atoi(v); err == nil {
 		return true
 	}
@@ -26,6 +27,24 @@ func UpdateForumPostsCountByThread(tx *sqlx.Tx, thread tmodel.Thread, incValue i
 	return err
 }
 
+func CheckIfParentPostsInSameThread(tx *sqlx.Tx, post pmodel.Post) bool {
+	if post.Parent == nil {
+		return true
+	}
+	parentPost, err := GetPostById(tx, post.Parent)
+	if err != nil {
+		return false
+	}
+	return parentPost.Thread == post.Thread
+}
+
+func GetPostById(tx *sqlx.Tx, id *int) (pmodel.Post, error) {
+	query := `Select * from posts where id=$1`
+	var post pmodel.Post
+	err := tx.Get(&post, query, id)
+	return post, err
+}
+
 func AddNewPosts(posts []pmodel.Post, threadSlug string) ([]pmodel.Post, error) {
 	timeCreated := time.Now().UTC()
 	query := `INSERT INTO posts (author, created, forum, isedited, message, parent, thread) VALUES ($1,$2,$3,$4,$5,NULLIF($6,0),$7) returning *`
@@ -36,9 +55,8 @@ func AddNewPosts(posts []pmodel.Post, threadSlug string) ([]pmodel.Post, error) 
 	var err error
 	var thread tmodel.Thread
 	var threadId int
-	if isDigit(threadSlug) {
+	if IsDigit(threadSlug) {
 		fmt.Println("is digit")
-		//todo
 		threadId, _ = strconv.Atoi(threadSlug)
 		thread, err = trepo.GetThreadByID(tx, threadId)
 	} else {
@@ -47,13 +65,23 @@ func AddNewPosts(posts []pmodel.Post, threadSlug string) ([]pmodel.Post, error) 
 	if err != nil {
 		return nil, errors.New("no thread")
 	}
-	fmt.Println(err)
+
 	for _, post := range posts {
 		post.Created = timeCreated
 		post.Forum = thread.Forum
 		post.Thread = thread.Id
 		post.IsEdited = false
-		fmt.Println(post)
+
+		ok := checkIfAuthorExist(tx, post)
+		if !ok {
+			errMsg := "Can't find post author by nickname: " + post.Author
+			return nil, errors.New(errMsg)
+		}
+		ok = CheckIfParentPostsInSameThread(tx, post)
+		if !ok {
+			return nil, errors.New("no parent")
+		}
+
 		var newPost pmodel.Post
 		err := tx.Get(&newPost, query, post.Author, post.Created, post.Forum, post.IsEdited, post.Message, post.Parent, post.Thread)
 		fmt.Println("E:", err, newPost)
@@ -62,13 +90,18 @@ func AddNewPosts(posts []pmodel.Post, threadSlug string) ([]pmodel.Post, error) 
 		postList = append(postList, newPost)
 
 	}
-	//todo check if work
-	if err != nil {
-		return postList, err
-	}
+
 	err = UpdateForumPostsCountByThread(tx, thread, len(postList))
 	fmt.Println(postList)
 	return postList, err
+}
+
+func checkIfAuthorExist(tx *sqlx.Tx, post pmodel.Post) bool {
+	_, err := repository.GetUserByNickname(post.Author)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func GetPostsWithFlatSort(slug_or_id string, limit int) ([]pmodel.Post, error) {

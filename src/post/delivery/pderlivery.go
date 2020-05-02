@@ -17,15 +17,21 @@ func PostsCreate(w http.ResponseWriter, r *http.Request) {
 	posts, err := fetchPost(r)
 	fmt.Println(posts, err)
 	threadSlug := mux.Vars(r)["slug_or_id"]
+
 	if len(posts) == 0 {
 		utills.SendAnswerWithCode([]pmodel.Post{}, http.StatusCreated, w)
 		return
 	}
+
 	newPosts, err := prepo.AddNewPosts(posts, threadSlug)
 	fmt.Println(err)
 	if err != nil {
 		if err.Error() == "no thread" {
 			utills.SendServerError("no thread", http.StatusNotFound, w)
+			return
+		}
+		if err.Error()[0] == 'C' {
+			utills.SendServerError(err.Error(), 404, w)
 			return
 		} else {
 			utills.SendServerError("no parent", http.StatusConflict, w)
