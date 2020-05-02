@@ -45,7 +45,7 @@ func GetPostById(tx *sqlx.Tx, id *int) (pmodel.Post, error) {
 	return post, err
 }
 
-func AddNewPosts(posts []pmodel.Post, threadSlug string) ([]pmodel.Post, error) {
+func AddNewPosts(posts []pmodel.Post, thr tmodel.Thread) ([]pmodel.Post, error) {
 	timeCreated := time.Now().UTC()
 	query := `INSERT INTO posts (author, created, forum, isedited, message, parent, thread) VALUES ($1,$2,$3,$4,$5,NULLIF($6,0),$7) returning *`
 	conn := utills.GetConnection()
@@ -53,18 +53,7 @@ func AddNewPosts(posts []pmodel.Post, threadSlug string) ([]pmodel.Post, error) 
 	defer tx.Commit()
 	var postList []pmodel.Post
 	var err error
-	var thread tmodel.Thread
-	var threadId int
-	if IsDigit(threadSlug) {
-		fmt.Println("is digit")
-		threadId, _ = strconv.Atoi(threadSlug)
-		thread, err = trepo.GetThreadByID(tx, threadId)
-	} else {
-		thread, err = trepo.GetThreadBySlug(tx, threadSlug)
-	}
-	if err != nil {
-		return nil, errors.New("no thread")
-	}
+	thread := thr
 
 	for _, post := range posts {
 		post.Created = timeCreated

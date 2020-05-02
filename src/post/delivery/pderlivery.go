@@ -6,6 +6,8 @@ import (
 	"github.com/gorilla/mux"
 	pmodel "go-server-server-generated/src/post/models"
 	prepo "go-server-server-generated/src/post/repository"
+	tmodel "go-server-server-generated/src/thread/models"
+	trepo "go-server-server-generated/src/thread/repository"
 	"go-server-server-generated/src/utills"
 	"io/ioutil"
 	"net/http"
@@ -17,13 +19,32 @@ func PostsCreate(w http.ResponseWriter, r *http.Request) {
 	posts, err := fetchPost(r)
 	fmt.Println(posts, err)
 	threadSlug := mux.Vars(r)["slug_or_id"]
+	threadId, isId := utills.IsDigit(threadSlug)
+	var thread tmodel.Thread
+	if isId {
+		threadId, _ = strconv.Atoi(threadSlug)
+		thread, err = trepo.GetThreadByIDWithoutTx(threadId)
+		if err != nil {
+			errMsg := "Can't find post thread by id: " + strconv.Itoa(threadId)
+			utills.SendServerError(errMsg, 404, w)
+			return
+		}
+
+	} else {
+		thread, err = trepo.GetThreadBySlugWithoutTx(threadSlug)
+		if err != nil {
+			errMsg := "Can't find post thread by slug: " + threadSlug
+			utills.SendServerError(errMsg, 404, w)
+			return
+		}
+	}
 
 	if len(posts) == 0 {
 		utills.SendAnswerWithCode([]pmodel.Post{}, http.StatusCreated, w)
 		return
 	}
 
-	newPosts, err := prepo.AddNewPosts(posts, threadSlug)
+	newPosts, err := prepo.AddNewPosts(posts, thread)
 	fmt.Println(err)
 	if err != nil {
 		if err.Error() == "no thread" {
