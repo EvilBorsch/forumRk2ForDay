@@ -97,3 +97,23 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+func GetSinglePost(w http.ResponseWriter, r *http.Request) {
+
+	postId, _ := strconv.Atoi(mux.Vars(r)["id"])
+	type retKek struct {
+		Post pmodel.Post `json:"post"`
+	}
+	tx := utills.StartTransaction()
+	defer utills.EndTransaction(tx)
+	post, err := prepo.GetPostById(tx, &postId)
+	if err != nil {
+		utills.SendServerError("post not found", 404, w)
+		return
+	}
+
+	retVal := retKek{
+		Post: post,
+	}
+	utills.SendOKAnswer(retVal, w)
+}

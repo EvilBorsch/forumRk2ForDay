@@ -10,7 +10,7 @@
 package main
 
 import (
-	swagger "go-server-server-generated/go"
+	router2 "go-server-server-generated/go/router"
 	"log"
 	"net/http"
 )
@@ -18,7 +18,7 @@ import (
 func main() {
 	log.Printf("Server started")
 
-	router := swagger.NewRouter()
+	router := router2.NewRouter()
 
 	log.Println(http.ListenAndServe(":8080", router))
 }

@@ -14,11 +14,12 @@ func Count(w http.ResponseWriter, r *http.Request) {
 }
 
 func ClearAll(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	query := `TRUNCATE TABLE "user" CASCADE`
-	tx := utills.StartTransaction()
-	defer utills.EndTransaction(tx)
-	tx.Exec(query)
-	w.WriteHeader(http.StatusOK)
+	//todo uncomment its working cod commented only for test
+	//w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	//query := `TRUNCATE TABLE "user" CASCADE`
+	//tx := utills.StartTransaction()
+	//defer utills.EndTransaction(tx)
+	//tx.Exec(query)
+	//w.WriteHeader(http.StatusOK)
 
 }
