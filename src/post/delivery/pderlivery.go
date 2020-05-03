@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func PostsCreate(w http.ResponseWriter, r *http.Request) {
@@ -154,4 +155,41 @@ func GetSinglePost(w http.ResponseWriter, r *http.Request) {
 		Thread: thread,
 	}
 	utills.SendOKAnswer(retVal, w)
+}
+
+func UpdatePost(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	postId, _ := strconv.Atoi(mux.Vars(r)["id"])
+	UpdatedPost := fetchPostUpdate(r)
+	tx := utills.StartTransaction()
+	defer utills.EndTransaction(tx)
+	EditedPost, err := prepo.UpdatePost(tx, postId, UpdatedPost)
+	if err != nil {
+		utills.SendServerError("post not found", 404, w)
+		return
+	}
+	utills.SendOKAnswer(EditedPost, w)
+}
+
+func fetchPostUpdate(r *http.Request) pmodel.Post {
+	defer r.Body.Close()
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return pmodel.Post{}
+	}
+	type messageStruct struct {
+		Message string
+	}
+	var message messageStruct
+	err = json.Unmarshal(data, &message)
+	return pmodel.Post{
+		Id:       0,
+		Parent:   nil,
+		Author:   "",
+		Message:  message.Message,
+		IsEdited: false,
+		Forum:    "",
+		Thread:   0,
+		Created:  time.Time{},
+	}
 }

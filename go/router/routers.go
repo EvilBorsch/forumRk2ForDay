@@ -108,7 +108,7 @@ var routes = Routes{
 		"PostUpdate",
 		strings.ToUpper("Post"),
 		"/api/post/{id}/details",
-		swagger.PostUpdate,
+		pdelivery.UpdatePost,
 	},
 
 	Route{

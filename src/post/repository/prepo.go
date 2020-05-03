@@ -120,3 +120,15 @@ func GetPostsWithFlatSortById(tx *sqlx.Tx, id int, limit int) ([]pmodel.Post, er
 	fmt.Println(err)
 	return posts, err
 }
+
+func UpdatePost(tx *sqlx.Tx, postId int, UpdatedPost pmodel.Post) (pmodel.Post, error) {
+	prevPost, _ := GetPostById(tx, &postId)
+	if prevPost.Message == UpdatedPost.Message || UpdatedPost.Message == "" {
+		return prevPost, nil
+	}
+	query := `UPDATE posts SET message=$1,isEdited=true where id=$2 returning *`
+	var post pmodel.Post
+	err := tx.Get(&post, query, UpdatedPost.Message, postId)
+	return post, err
+
+}
