@@ -89,9 +89,9 @@ where ( (threads.forum=$1 or p.forum=$1) `
 	queryFinal = query
 	strOrder := "order by u.nickname " + isDesc + " LIMIT " + limit
 	if isDesc == "DESC" && since != "" {
-		queryFinal = queryFinal + "and lower(nickname)<lower($2)) "
+		queryFinal = queryFinal + "and lower(u.nickname)<lower($2)) "
 	} else if isDesc == "ASC" && since != "" {
-		queryFinal = queryFinal + "and lower(nickname)>lower($2)) "
+		queryFinal = queryFinal + "and lower(u.nickname)>lower($2)) "
 	} else if since == "" {
 		queryFinal = queryFinal + ") "
 	}
