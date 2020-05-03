@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	fmodel "go-server-server-generated/src/forum/models"
 	tmodel "go-server-server-generated/src/thread/models"
 	swagger "go-server-server-generated/src/user/models"
@@ -80,6 +82,10 @@ func GetForumUsers(forumSlug string, isDesc string, limit string, since string) 
 	} else {
 		isDesc = "DESC"
 	}
+	_, err := GetForumBySlug(forumSlug)
+	if err != nil {
+		return nil, errors.New("forum not found")
+	}
 	var queryFinal string
 	query := `Select distinct u.nickname, fullname,about,email
 from threads
@@ -104,6 +110,24 @@ where ( (threads.forum=$1 or p.forum=$1) `
 		err := tx.Select(&users, queryFinal, forumSlug, since)
 		return users, err
 	}
-	err := tx.Select(&users, queryFinal, forumSlug)
+	err = tx.Select(&users, queryFinal, forumSlug)
+	users = appendUserWhoVote(tx, users, forumSlug)
 	return users, err
+}
+
+func appendUserWhoVote(tx *sqlx.Tx, users []swagger.User, forumSlug string) []swagger.User {
+	query := `Select distinct u.nickname, fullname,about,email
+from votes
+         join threads t on votes.threadSlug = t.slug or votes.threadID=t.id
+         join "user" u on t.author = u.nickname
+		 where forum=$1`
+	var usersNew []swagger.User
+	err := tx.Select(&usersNew, query, forumSlug)
+	if err != nil {
+		return users
+	}
+	for _, usr := range usersNew {
+		users = append(users, usr)
+	}
+	return users
 }
