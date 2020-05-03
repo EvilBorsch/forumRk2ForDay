@@ -85,6 +85,14 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	var limit int
 	limitStr := r.FormValue("limit")
+	sinceStr := r.FormValue("since")
+	var sinceID int
+	if sinceStr == "" {
+		sinceID = 1
+	} else {
+		sinceID, _ = strconv.Atoi(sinceStr)
+	}
+
 	if limitStr == "" {
 		limit = 100
 	} else {
@@ -94,9 +102,14 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	sort := r.FormValue("sort")
 	fmt.Println(limit, sort)
 	if sort == "" || sort == "flat" {
-		posts, err := prepo.GetPostsWithFlatSort(slug_or_id, limit)
+		posts, err := prepo.GetPostsWithFlatSort(slug_or_id, limit, sinceID)
 		if err != nil {
 			utills.SendServerError("posts not found", 404, w)
+			return
+		}
+		if posts == nil {
+			emptyPost := []pmodel.Post{}
+			utills.SendOKAnswer(emptyPost, w)
 			return
 		}
 		utills.SendOKAnswer(posts, w)

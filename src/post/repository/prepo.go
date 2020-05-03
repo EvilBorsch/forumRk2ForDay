@@ -93,30 +93,30 @@ func checkIfAuthorExist(tx *sqlx.Tx, post pmodel.Post) bool {
 	return true
 }
 
-func GetPostsWithFlatSort(slug_or_id string, limit int) ([]pmodel.Post, error) {
+func GetPostsWithFlatSort(slug_or_id string, limit int, sinceID int) ([]pmodel.Post, error) {
 	tx := utills.StartTransaction()
 	defer utills.EndTransaction(tx)
 	id, isDig := utills.IsDigit(slug_or_id)
 	if isDig {
-		return GetPostsWithFlatSortById(tx, id, limit)
+		return GetPostsWithFlatSortById(tx, id, limit, sinceID)
 	} else {
-		return GetPostsWithFlatSortBySlug(tx, slug_or_id, limit)
+		return GetPostsWithFlatSortBySlug(tx, slug_or_id, limit, sinceID)
 	}
 }
 
-func GetPostsWithFlatSortBySlug(tx *sqlx.Tx, slug string, limit int) ([]pmodel.Post, error) {
+func GetPostsWithFlatSortBySlug(tx *sqlx.Tx, slug string, limit int, sinceId int) ([]pmodel.Post, error) {
 	thread, err := trepo.GetThreadBySlug(tx, slug)
 	if err != nil {
 		return nil, err
 	}
-	return GetPostsWithFlatSortById(tx, thread.Id, limit)
+	return GetPostsWithFlatSortById(tx, thread.Id, limit, sinceId)
 
 }
 
-func GetPostsWithFlatSortById(tx *sqlx.Tx, id int, limit int) ([]pmodel.Post, error) {
-	query := `Select * from posts where thread=$1 order by created,id LIMIT $2`
+func GetPostsWithFlatSortById(tx *sqlx.Tx, id int, limit int, sinceID int) ([]pmodel.Post, error) {
+	query := `Select * from posts where thread=$1 and id>$2 order by created,id LIMIT $3`
 	var posts []pmodel.Post
-	err := tx.Select(&posts, query, id, limit)
+	err := tx.Select(&posts, query, id, sinceID, limit)
 	fmt.Println(err)
 	return posts, err
 }
