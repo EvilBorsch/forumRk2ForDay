@@ -6,6 +6,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	frepo "go-server-server-generated/src/forum/repository"
 	tm "go-server-server-generated/src/thread/models"
+	"go-server-server-generated/src/user/repository"
 	"go-server-server-generated/src/utills"
 	"strconv"
 )
@@ -132,7 +133,12 @@ func getAuthorVotesByThread(tx *sqlx.Tx, thread tm.Thread, nick string) (tm.Vote
 func MakeVote(slug_or_id string, newVote tm.Vote) (tm.Thread, error) {
 	AlreadyVotedErr := errors.New("already voted")
 	ThreadIsNotExistErr := errors.New("thread is not exist")
+	AuthorIsNotExistErr := errors.New("author not found")
 	author := newVote.Nickname
+	_, err := repository.GetUserByNickname(author)
+	if err != nil {
+		return tm.Thread{}, AuthorIsNotExistErr
+	}
 	conn := utills.GetConnection()
 	tx := conn.MustBegin()
 	defer tx.Commit()

@@ -74,12 +74,19 @@ func ThreadVote(w http.ResponseWriter, r *http.Request) {
 	thread, err := trepo.MakeVote(slug_or_id, vote)
 	fmt.Println(thread, err)
 	if err != nil {
+		if err.Error() == "author not found" {
+			errMsg := "Can't find user by nickname: " + vote.Nickname
+			utills.SendServerError(errMsg, 404, w)
+			return
+		}
 		if err.Error() == "already voted" { // да да это тупо а что поделать
 			utills.SendAnswerWithCode(thread, http.StatusOK, w)
 			return
 		}
 		if err.Error() == "thread is not exist" {
-			utills.SendServerError("thread is not exist", http.StatusNotFound, w)
+			errMsg := "Can't find thread by slug or id: " + slug_or_id
+			utills.SendServerError(errMsg, http.StatusNotFound, w)
+			return
 		}
 	}
 	utills.SendAnswerWithCode(thread, http.StatusOK, w)

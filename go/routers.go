@@ -14,6 +14,7 @@ import (
 	"github.com/gorilla/mux"
 	fdelivery "go-server-server-generated/src/forum/delivery"
 	pdelivery "go-server-server-generated/src/post/delivery"
+	"go-server-server-generated/src/service/delivery"
 	tdelivery "go-server-server-generated/src/thread/delivery"
 	ud "go-server-server-generated/src/user/delivery"
 	"go-server-server-generated/src/utills"
@@ -64,7 +65,7 @@ var routes = Routes{
 		"Clear",
 		strings.ToUpper("Post"),
 		"/api/service/clear",
-		Clear,
+		delivery.ClearAll,
 	},
 
 	Route{
@@ -120,7 +121,7 @@ var routes = Routes{
 		"Status",
 		strings.ToUpper("Get"),
 		"/api/service/status",
-		Status,
+		delivery.Count,
 	},
 
 	Route{
