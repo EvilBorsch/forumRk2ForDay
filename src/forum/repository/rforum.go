@@ -4,6 +4,7 @@ import (
 	"fmt"
 	fmodel "go-server-server-generated/src/forum/models"
 	tmodel "go-server-server-generated/src/thread/models"
+	swagger "go-server-server-generated/src/user/models"
 	urepo "go-server-server-generated/src/user/repository"
 	"go-server-server-generated/src/utills"
 	"time"
@@ -67,4 +68,42 @@ func IncrementFieldBySlug(fieldName string, slug string) error {
 	conn := utills.GetConnection()
 	_, err := conn.Exec(query, slug)
 	return err
+}
+
+func GetForumUsers(forumSlug string, isDesc string, limit string, since string) ([]swagger.User, error) {
+
+	if limit == "" {
+		limit = "100"
+	}
+	if isDesc == "" || isDesc == "false" {
+		isDesc = "ASC"
+	} else {
+		isDesc = "DESC"
+	}
+	var queryFinal string
+	query := `Select distinct u.nickname, fullname,about,email
+from threads
+         join posts p on threads.id = p.thread
+         join "user" u on (p.author = u.nickname or threads.author = u.nickname)
+where ( (threads.forum=$1 or p.forum=$1) `
+	queryFinal = query
+	strOrder := "order by u.nickname " + isDesc + " LIMIT " + limit
+	if isDesc == "DESC" && since != "" {
+		queryFinal = queryFinal + "and lower(nickname)<lower($2)) "
+	} else if isDesc == "ASC" && since != "" {
+		queryFinal = queryFinal + "and lower(nickname)>lower($2)) "
+	} else if since == "" {
+		queryFinal = queryFinal + ") "
+	}
+	queryFinal = queryFinal + strOrder
+	tx := utills.StartTransaction()
+	defer utills.EndTransaction(tx)
+	var users []swagger.User
+
+	if since != "" {
+		err := tx.Select(&users, queryFinal, forumSlug, since)
+		return users, err
+	}
+	err := tx.Select(&users, queryFinal, forumSlug)
+	return users, err
 }

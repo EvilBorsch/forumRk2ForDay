@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	fmodel "go-server-server-generated/src/forum/models"
 	frepo "go-server-server-generated/src/forum/repository"
+	swagger "go-server-server-generated/src/user/models"
 	"go-server-server-generated/src/utills"
 	"io/ioutil"
 	"net/http"
@@ -77,4 +78,24 @@ func ForumGetThreads(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	utills.SendOKAnswer(threads, w)
+}
+
+func GetForumUsers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	forumSlug := mux.Vars(r)["slug"]
+	isDesc := r.FormValue("desc")
+	limit := r.FormValue("limit")
+	since := r.FormValue("since")
+	users, err := frepo.GetForumUsers(forumSlug, isDesc, limit, since)
+	fmt.Println(users, err)
+	if err != nil {
+		utills.SendServerError("forum not found", 404, w)
+		return
+	}
+	if users == nil {
+		empt := []swagger.User{}
+		utills.SendOKAnswer(empt, w)
+		return
+	}
+	utills.SendOKAnswer(users, w)
 }

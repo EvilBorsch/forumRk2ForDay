@@ -94,7 +94,7 @@ var routes = Routes{
 		"ForumGetUsers",
 		strings.ToUpper("Get"),
 		"/api/forum/{slug}/users",
-		swagger.ForumGetUsers,
+		fdelivery.GetForumUsers,
 	},
 
 	Route{
