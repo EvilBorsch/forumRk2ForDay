@@ -4,14 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"go-server-server-generated/src/forum/models"
+	frepo "go-server-server-generated/src/forum/repository"
 	pmodel "go-server-server-generated/src/post/models"
 	prepo "go-server-server-generated/src/post/repository"
 	tmodel "go-server-server-generated/src/thread/models"
 	trepo "go-server-server-generated/src/thread/repository"
+	swagger "go-server-server-generated/src/user/models"
+	"go-server-server-generated/src/user/repository"
 	"go-server-server-generated/src/utills"
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 func PostsCreate(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +81,7 @@ func fetchPost(r *http.Request) ([]pmodel.Post, error) {
 }
 
 func GetPosts(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	var limit int
 	limitStr := r.FormValue("limit")
 	if limitStr == "" {
@@ -99,11 +105,9 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetSinglePost(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 	postId, _ := strconv.Atoi(mux.Vars(r)["id"])
-	type retKek struct {
-		Post pmodel.Post `json:"post"`
-	}
 	tx := utills.StartTransaction()
 	defer utills.EndTransaction(tx)
 	post, err := prepo.GetPostById(tx, &postId)
@@ -111,9 +115,43 @@ func GetSinglePost(w http.ResponseWriter, r *http.Request) {
 		utills.SendServerError("post not found", 404, w)
 		return
 	}
+	related := r.FormValue("related")
+	relatedSplit := strings.Split(related, ",")
+	var user *swagger.User = nil
+	var thread *tmodel.Thread = nil
+	var forum *models.Forum = nil
+	for _, key := range relatedSplit {
+		switch key {
+		case "user":
+			usertmp, err := repository.GetUserByNickname(post.Author)
+			user = &usertmp
+			if err != nil {
+				utills.SendServerError("user not found", 404, w)
+				return
+			}
+		case "forum":
+			forumtmp, err := frepo.GetForumBySlug(post.Forum)
+			forum = &forumtmp
+			if err != nil {
+				utills.SendServerError("forum not found", 404, w)
+				return
+			}
+		case "thread":
+			threadtmp, err := trepo.GetThreadByID(tx, post.Thread)
+			thread = &threadtmp
+			if err != nil {
+				utills.SendServerError("forum not found", 404, w)
+				return
+			}
+		}
+	}
+	fmt.Println(related, postId)
 
-	retVal := retKek{
-		Post: post,
+	retVal := pmodel.PostFull{
+		Post:   post,
+		Author: user,
+		Forum:  forum,
+		Thread: thread,
 	}
 	utills.SendOKAnswer(retVal, w)
 }
