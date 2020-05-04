@@ -89,11 +89,13 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	desc := r.FormValue("desc")
 	var sinceID int
 	if sinceStr == "" {
-		sinceID = 1
+		sinceID = 0
 	} else {
 		sinceID, _ = strconv.Atoi(sinceStr)
 	}
-	if desc ==
+	if desc == "" {
+		desc = "false"
+	}
 
 	if limitStr == "" {
 		limit = 100
@@ -109,7 +111,7 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		posts, err = prepo.GetPostsWithFlatSort(slug_or_id, limit, sinceID)
 	}
 	if sort == "tree" {
-		posts, err = prepo.GetPostsTree(slug_or_id, limit, sinceID)
+		posts, err = prepo.GetPostsWithTreeSort(slug_or_id, limit, sinceID, desc)
 	}
 	if err != nil {
 		utills.SendServerError("posts not found", 404, w)

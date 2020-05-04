@@ -133,23 +133,42 @@ func UpdatePost(tx *sqlx.Tx, postId int, UpdatedPost pmodel.Post) (pmodel.Post, 
 
 }
 
-func GetPostsTree(tx *sqlx.Tx, threadID, limit, since int, desc bool) ([]pmodel.Post, error) {
+func GetPostsWithTreeSort(slug_or_id string, limit int, sinceID int, desc string) ([]pmodel.Post, error) {
+	tx := utills.StartTransaction()
+	defer utills.EndTransaction(tx)
+	id, isDig := utills.IsDigit(slug_or_id)
+	if isDig {
+		return GetPostsWithTreeSortById(tx, id, limit, sinceID, desc)
+	} else {
+		return GetPostsWithTreeSortBySlug(tx, slug_or_id, limit, sinceID, desc)
+	}
+}
+
+func GetPostsWithTreeSortBySlug(tx *sqlx.Tx, slug string, limit int, sinceId int, desc string) ([]pmodel.Post, error) {
+	thread, err := trepo.GetThreadBySlug(tx, slug)
+	if err != nil {
+		return nil, err
+	}
+	return GetPostsWithTreeSortById(tx, thread.Id, limit, sinceId, desc)
+}
+
+func GetPostsWithTreeSortById(tx *sqlx.Tx, threadID int, limit, since int, desc string) ([]pmodel.Post, error) {
 	var query string
 	sinceQuery := ""
 	if since != 0 {
-		if desc {
-			sinceQuery = `AND PATH < `
+		if desc == "true" {
+			sinceQuery = `AND parents < `
 		} else {
-			sinceQuery = `AND PATH > `
+			sinceQuery = `AND parents > `
 		}
-		sinceQuery += fmt.Sprintf(`(SELECT path FROM post WHERE id = %d)`, since)
+		sinceQuery += fmt.Sprintf(`(SELECT parents FROM posts WHERE id = %d)`, since)
 	}
-	if desc {
+	if desc == "true" {
 		query = fmt.Sprintf(
-			`SELECT * FROM post WHERE thread=$1 %s ORDER BY path DESC, id DESC LIMIT NULLIF($2, 0);`, sinceQuery)
+			`SELECT * FROM posts WHERE thread=$1 %s ORDER BY parents DESC, id DESC LIMIT NULLIF($2, 0);`, sinceQuery)
 	} else {
 		query = fmt.Sprintf(
-			`SELECT * FROM post WHERE thread=$1 %s ORDER BY path, id LIMIT NULLIF($2, 0);`, sinceQuery)
+			`SELECT * FROM posts WHERE thread=$1 %s ORDER BY parents, id LIMIT NULLIF($2, 0);`, sinceQuery)
 	}
 	var posts []pmodel.Post
 	err := tx.Select(&posts, query, threadID, limit)
