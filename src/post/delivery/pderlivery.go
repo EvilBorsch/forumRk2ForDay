@@ -86,12 +86,14 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	var limit int
 	limitStr := r.FormValue("limit")
 	sinceStr := r.FormValue("since")
+	desc := r.FormValue("desc")
 	var sinceID int
 	if sinceStr == "" {
 		sinceID = 1
 	} else {
 		sinceID, _ = strconv.Atoi(sinceStr)
 	}
+	if desc ==
 
 	if limitStr == "" {
 		limit = 100
@@ -101,20 +103,26 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	slug_or_id := mux.Vars(r)["slug_or_id"]
 	sort := r.FormValue("sort")
 	fmt.Println(limit, sort)
+	var posts []pmodel.Post
+	var err error
 	if sort == "" || sort == "flat" {
-		posts, err := prepo.GetPostsWithFlatSort(slug_or_id, limit, sinceID)
-		if err != nil {
-			utills.SendServerError("posts not found", 404, w)
-			return
-		}
-		if posts == nil {
-			emptyPost := []pmodel.Post{}
-			utills.SendOKAnswer(emptyPost, w)
-			return
-		}
-		utills.SendOKAnswer(posts, w)
+		posts, err = prepo.GetPostsWithFlatSort(slug_or_id, limit, sinceID)
+	}
+	if sort == "tree" {
+		posts, err = prepo.GetPostsTree(slug_or_id, limit, sinceID)
+	}
+	if err != nil {
+		utills.SendServerError("posts not found", 404, w)
 		return
 	}
+
+	if posts == nil {
+		emptyPost := []pmodel.Post{}
+		utills.SendOKAnswer(emptyPost, w)
+		return
+	}
+	utills.SendOKAnswer(posts, w)
+	return
 
 }
 

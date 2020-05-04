@@ -132,3 +132,26 @@ func UpdatePost(tx *sqlx.Tx, postId int, UpdatedPost pmodel.Post) (pmodel.Post, 
 	return post, err
 
 }
+
+func GetPostsTree(tx *sqlx.Tx, threadID, limit, since int, desc bool) ([]pmodel.Post, error) {
+	var query string
+	sinceQuery := ""
+	if since != 0 {
+		if desc {
+			sinceQuery = `AND PATH < `
+		} else {
+			sinceQuery = `AND PATH > `
+		}
+		sinceQuery += fmt.Sprintf(`(SELECT path FROM post WHERE id = %d)`, since)
+	}
+	if desc {
+		query = fmt.Sprintf(
+			`SELECT * FROM post WHERE thread=$1 %s ORDER BY path DESC, id DESC LIMIT NULLIF($2, 0);`, sinceQuery)
+	} else {
+		query = fmt.Sprintf(
+			`SELECT * FROM post WHERE thread=$1 %s ORDER BY path, id LIMIT NULLIF($2, 0);`, sinceQuery)
+	}
+	var posts []pmodel.Post
+	err := tx.Select(&posts, query, threadID, limit)
+	return posts, err
+}
