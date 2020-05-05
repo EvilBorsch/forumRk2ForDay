@@ -41,7 +41,9 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		userList, err := urepo.GetUserByNicknameAndEmail(user.Nickname, user.Email)
 		if err != nil {
+			fmt.Println(err)
 			utills.SendServerError("error when try find users with this email and nick", http.StatusConflict, w)
+
 		}
 		utills.SendAnswerWithCode(userList, http.StatusConflict, w)
 		return
