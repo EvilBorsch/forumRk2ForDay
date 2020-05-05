@@ -13,11 +13,13 @@ import (
 var conn *sqlx.DB
 
 func CreateConnection() {
-	connStr := fmt.Sprintf("user=%s password=%s dbname=docker sslmode=disable port=%s",
-		"docker",
-		"docker",
+	connStr := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable port=%s",
+		"postgres", //docker,postgres
+		"",         //docker, empty
+		"postgres", //docker,postgres
 		"5432")
 	conn, _ = sqlx.Open("postgres", connStr)
+	conn.SetMaxOpenConns(10)
 
 }
 
