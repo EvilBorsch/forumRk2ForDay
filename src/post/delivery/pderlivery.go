@@ -103,15 +103,19 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		limit, _ = strconv.Atoi(limitStr)
 	}
 	slug_or_id := mux.Vars(r)["slug_or_id"]
+
 	sort := r.FormValue("sort")
 	fmt.Println(limit, sort)
 	var posts []pmodel.Post
 	var err error
 	if sort == "" || sort == "flat" {
-		posts, err = prepo.GetPostsWithFlatSort(slug_or_id, limit, sinceID)
+		posts, err = prepo.GetPostsWithFlatSort(slug_or_id, limit, sinceID, desc)
 	}
 	if sort == "tree" {
 		posts, err = prepo.GetPostsWithTreeSort(slug_or_id, limit, sinceID, desc)
+	}
+	if sort == "parent_tree" {
+		posts, err = prepo.GetPostsWithParentTreeSort(slug_or_id, limit, sinceID, desc)
 	}
 	if err != nil {
 		utills.SendServerError("posts not found", 404, w)
