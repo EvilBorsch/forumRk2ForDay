@@ -13,9 +13,9 @@ import (
 var conn *sqlx.DB
 
 func CreateConnection() {
-	connStr := fmt.Sprintf("user=%s password=%s dbname=postgres sslmode=disable port=%s",
-		"postgres",
-		"",
+	connStr := fmt.Sprintf("user=%s password=%s dbname=docker sslmode=disable port=%s",
+		"docker",
+		"docker",
 		"5432")
 	conn, _ = sqlx.Open("postgres", connStr)
 
