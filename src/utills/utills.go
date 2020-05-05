@@ -14,9 +14,9 @@ var conn *sqlx.DB
 
 func CreateConnection() {
 	connStr := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable port=%s",
-		"postgres", //docker,postgres
-		"",         //docker, empty
-		"postgres", //docker,postgres
+		"docker", //docker,postgres
+		"docker",         //docker, empty
+		"docker", //docker,postgres
 		"5432")
 	conn, _ = sqlx.Open("postgres", connStr)
 	conn.SetMaxOpenConns(10)
