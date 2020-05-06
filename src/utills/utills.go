@@ -19,7 +19,6 @@ func CreateConnection() {
 		"docker", //docker,postgres
 		"5432")
 	conn, _ = sqlx.Open("postgres", connStr)
-	conn.SetMaxOpenConns(10)
 
 }
 

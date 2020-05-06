@@ -81,3 +81,30 @@ create trigger inserter
     on posts
     for each row
 execute procedure parents_change();
+
+
+
+CREATE INDEX votes_idx on votes(nickname,threadID);
+
+--
+-- create index if not exists idx_forum_user on forum (user_nickname);
+--
+--
+
+create index if not exists slug_id on threads (slug);
+-- create index if not exists f_created_idx on threads (forum, created);
+-- create index if not exists t_author_idx on threads (author, forum);
+--
+
+
+
+create index if not exists path_id_idx on posts (id, (parents [1]));
+create index if not exists posts_path_id on posts (parents);
+create index if not exists thread_id_idx on posts (thread, id);
+create index if not exists thread_post_id on posts (thread);
+create index if not exists post_path_2_id on posts ((parents [1]));
+create index if not exists thread_id_parents_parent on posts (thread, id, (parents[1]), parent);
+create index if not exists author_forum_idx on posts (author, forum);
+create index if not exists thread_parents_id_idx on posts (thread, parents, id);
+
+
